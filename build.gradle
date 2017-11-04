@@ -1,0 +1,69 @@
+plugins {
+  id 'application'
+  id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
+repositories {
+  jcenter()
+}
+
+version = '1.0-SNAPSHOT'
+sourceCompatibility = '1.8'
+mainClassName = 'io.vertx.core.Launcher'
+
+def vertxVersion = '3.4.2'
+
+def mainVerticleName = 'io.vertx.starter.MainVerticle'
+def watchForChange = 'src/**/*'
+def doOnChange = './gradlew classes'
+
+dependencies {
+  compile 'io.vertx:vertx-web:3.4.2'
+  compile "io.vertx:vertx-core:$vertxVersion"
+  testCompile "junit:junit:4.12"
+  testCompile "io.vertx:vertx-unit:$vertxVersion"
+  compile 'io.vertx:vertx-web-templ-freemarker:3.4.2'
+  compile 'io.vertx:vertx-jdbc-client:3.4.1'
+  compile 'io.vertx:vertx-mysql-postgresql-client:3.4.2'
+  compile 'io.vertx:vertx-sql-common:3.4.2'
+  compile 'org.slf4j:slf4j-api:1.5.8'
+  compile 'org.slf4j:slf4j-log4j12:1.5.8'
+  compile 'io.vertx:vertx-service-proxy:3.4.2'
+  compile "io.vertx:vertx-service-proxy:3.4.2:processor"
+  compile "io.vertx:vertx-lang-groovy:$vertxVersion"
+  compileOnly 'io.vertx:vertx-codegen:3.4.2'
+
+  //Vert.X Auth项目提供了处理认证和授权的功能
+  compile "io.vertx:vertx-auth-common:3.4.2"
+  //生成二维码
+  // https://mvnrepository.com/artifact/com.google.zxing/core
+  compile group: 'com.google.zxing', name: 'core', version: '3.3.0'
+}
+
+//jar {
+//  manifest {
+//    attributes "Main-Class": "io.vertx.core.Launcher",//改为Launcher
+//      "Main-Verticle": "io.vertx.starter.MainVerticle"//新增Main Verticle属性，对应MainVerticle类
+//  }
+//
+//  from {
+//    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+//  }
+//}
+shadowJar {
+  classifier = 'fat'
+  manifest {
+      attributes "Main-Verticle": mainVerticleName
+  }
+  mergeServiceFiles {
+    include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+  }
+}
+
+run {
+  args = ['run', mainVerticleName, "--redeploy=$watchForChange", "--launcher-class=$mainClassName", "--on-redeploy=$doOnChange"]
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.1'
+}
